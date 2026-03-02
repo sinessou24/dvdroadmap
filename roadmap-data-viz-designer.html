@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap — Data Visualization Designer</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent1: #7fffb2;
+    --accent2: #ff6b6b;
+    --accent3: #6bb5ff;
+    --accent4: #ffcc6b;
+    --text: #e8e8f0;
+    --muted: #6b6b88;
+    --phase1: #7fffb2;
+    --phase2: #6bb5ff;
+    --phase3: #ffcc6b;
+    --phase4: #ff6b6b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  .hero {
+    padding: 80px 60px 60px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent1);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.2s;
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(42px, 6vw, 72px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+    margin-bottom: 16px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.4s;
+  }
+
+  .hero-title span { color: var(--accent1); }
+
+  .hero-sub {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.6s;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 32px;
+    margin-top: 40px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.8s;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .meta-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .meta-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .grid-bg {
+    position: absolute;
+    top: 0; right: 0;
+    width: 400px;
+    height: 100%;
+    background-image: 
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: linear-gradient(to left, rgba(0,0,0,0.3), transparent);
+    pointer-events: none;
+  }
+
+  .timeline {
+    padding: 60px;
+    position: relative;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 60px;
+    top: 60px;
+    bottom: 60px;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--accent1), var(--accent2), var(--accent3), var(--accent4));
+    opacity: 0.3;
+  }
+
+  .phase {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 0 50px;
+    margin-bottom: 80px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .phase.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .phase-sidebar {
+    position: relative;
+    padding-top: 4px;
+  }
+
+  .phase-dot {
+    position: absolute;
+    left: -68px;
+    top: 8px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    background: var(--bg);
+  }
+
+  .phase-number {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .phase-duration {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .phase-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .phase-content {}
+
+  .phase-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .phase-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .skill-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+
+  .skill-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .skill-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: currentColor;
+    opacity: 0.6;
+  }
+
+  .skill-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .skill-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .skill-badge {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    padding: 3px 7px;
+    border-radius: 3px;
+    background: currentColor;
+    color: var(--bg) !important;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0.9;
+  }
+
+  .skill-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .hours-bar {
+    margin-top: 10px;
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .hours-fill {
+    height: 100%;
+    background: currentColor;
+    opacity: 0.5;
+    border-radius: 2px;
+  }
+
+  .hours-label {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 5px;
+    letter-spacing: 1px;
+  }
+
+  .deliverable-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-top: 8px;
+  }
+
+  .deliverable-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .deliverable-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .deliverable-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .deliverable-item::before {
+    content: '→';
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  .phase-1 { color: var(--phase1); }
+  .phase-2 { color: var(--phase2); }
+  .phase-3 { color: var(--phase3); }
+  .phase-4 { color: var(--phase4); }
+
+  .superpower {
+    background: linear-gradient(135deg, #111118, #0d0d15);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin: 0 60px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .superpower::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(127,255,178,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .superpower-tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent1);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .superpower-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+
+  .superpower-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .superpower-item {
+    padding: 16px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .superpower-icon {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+
+  .superpower-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .superpower-text {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .salary-section {
+    margin: 0 60px 80px;
+    padding: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .salary-tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent4);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .salary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .salary-item {
+    text-align: center;
+  }
+
+  .salary-amount {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+
+  .salary-role {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .footer {
+    padding: 40px 60px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-text {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .footer-accent {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent1);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .progress-tracker {
+    display: flex;
+    gap: 6px;
+    margin: 0 60px 60px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    align-items: center;
+  }
+
+  .progress-phase {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+    transition: height 0.2s, opacity 0.2s;
+  }
+
+  .progress-phase:hover {
+    height: 7px;
+    opacity: 0.85;
+  }
+
+  .progress-phase::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -28px;
+    left: 0;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+
+  .progress-phase:hover::before {
+    opacity: 1;
+  }
+
+  .progress-phase::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .p1 { background: var(--phase1); }
+  .p2 { background: var(--phase2); }
+  .p3 { background: var(--phase3); }
+  .p4 { background: var(--phase4); }
+
+  .progress-divider {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .total-time {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-left: 20px;
+    white-space: nowrap;
+  }
+
+  /* NAV */
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999;
+    background: rgba(10, 10, 15, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 60px;
+    display: flex;
+    align-items: center;
+    height: 52px;
+    gap: 8px;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--accent1);
+    letter-spacing: 1px;
+    margin-right: 24px;
+    white-space: nowrap;
+  }
+
+  .nav-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin-right: 16px;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .nav-link:hover {
+    color: var(--text);
+    border-color: var(--border);
+    background: var(--surface);
+  }
+
+  .nav-link.active {
+    color: var(--bg);
+    border-color: transparent;
+  }
+
+  .nav-link .nav-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .nav-link-1 { --nav-color: var(--phase1); }
+  .nav-link-2 { --nav-color: var(--phase2); }
+  .nav-link-3 { --nav-color: var(--phase3); }
+  .nav-link-4 { --nav-color: var(--phase4); }
+
+  .nav-link-1:hover, .nav-link-1.active { color: var(--phase1); border-color: var(--phase1); background: rgba(127,255,178,0.08); }
+  .nav-link-2:hover, .nav-link-2.active { color: var(--phase2); border-color: var(--phase2); background: rgba(107,181,255,0.08); }
+  .nav-link-3:hover, .nav-link-3.active { color: var(--phase3); border-color: var(--phase3); background: rgba(255,204,107,0.08); }
+  .nav-link-4:hover, .nav-link-4.active { color: var(--phase4); border-color: var(--phase4); background: rgba(255,107,107,0.08); }
+
+  /* ── CHECKBOX SYSTEM ── */
+  .skill-card {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .skill-card.done {
+    opacity: 0.45;
+    border-style: dashed;
+  }
+
+  .skill-card.done .skill-name {
+    text-decoration: line-through;
+  }
+
+  .check-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s, transform 0.15s;
+    margin-left: auto;
+  }
+
+  .skill-card.done .check-circle {
+    background: currentColor;
+    transform: scale(1.1);
+  }
+
+  .check-circle svg {
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .skill-card.done .check-circle svg {
+    opacity: 1;
+  }
+
+  /* deliverable checkboxes */
+  .deliverable-item {
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .deliverable-item:hover { background: rgba(255,255,255,0.03); }
+
+  .deliverable-item.done {
+    opacity: 0.4;
+    text-decoration: line-through;
+  }
+
+  .deliverable-item::before { display: none; }
+
+  .d-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid var(--muted);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .deliverable-item.done .d-check {
+    background: var(--accent1);
+    border-color: var(--accent1);
+  }
+
+  .d-check svg { opacity: 0; transition: opacity 0.15s; }
+  .deliverable-item.done .d-check svg { opacity: 1; }
+
+  /* Phase progress bar */
+  .phase-progress-wrap {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .phase-progress-bar {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .phase-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: currentColor;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .phase-progress-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .phase-progress-label span {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .phase-title {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: opacity 0.2s;
+  }
+
+  .phase-title:hover { opacity: 0.8; }
+
+  .phase-title::after {
+    content: '↑';
+    font-size: 14px;
+    opacity: 0.4;
+    font-family: 'DM Mono', monospace;
+    font-weight: 400;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  .phase-title:hover::after {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
+
+  /* Offset for fixed nav */
+  html { scroll-behavior: smooth; }
+  .phase, .superpower, .salary-section { scroll-margin-top: 70px; }
+  .hero { padding-top: 120px; }
+
+  @media (max-width: 768px) {
+    .hero { padding: 80px 24px 40px; }
+    .timeline { padding: 40px 40px; }
+    .phase { grid-template-columns: 1fr; gap: 16px; }
+    .phase-sidebar { padding-left: 0; }
+    .phase-dot { display: none; }
+    .timeline::before { display: none; }
+    .superpower { margin: 0 24px 40px; }
+    .superpower-grid { grid-template-columns: 1fr; }
+    .salary-section { margin: 0 24px 40px; }
+    .salary-grid { grid-template-columns: 1fr; }
+    .progress-tracker { margin: 0 24px 40px; }
+    .footer { padding: 24px; flex-direction: column; gap: 12px; }
+    .nav { padding: 0 16px; gap: 4px; overflow-x: auto; }
+    .nav-logo { display: none; }
+    .nav-divider { display: none; }
+    .nav-link { padding: 5px 10px; font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Fixed Navigation -->
+<nav class="nav">
+  <div class="nav-logo">DVD Roadmap</div>
+  <div class="nav-divider"></div>
+  <a class="nav-link nav-link-1" onclick="goToPhase('phase1')"><span class="nav-dot"></span>01 — Fondations</a>
+  <a class="nav-link nav-link-2" onclick="goToPhase('phase2')"><span class="nav-dot"></span>02 — Formation</a>
+  <a class="nav-link nav-link-3" onclick="goToPhase('phase3')"><span class="nav-dot"></span>03 — Spécialisation</a>
+  <a class="nav-link nav-link-4" onclick="goToPhase('phase4')"><span class="nav-dot"></span>04 — Emploi</a>
+</nav>
+
+<div class="hero">
+  <div class="grid-bg"></div>
+  <div class="hero-tag">// Roadmap personnalisée 2026</div>
+  <h1 class="hero-title">Data Visualization<br><span>Designer</span></h1>
+  <p class="hero-sub">Graphic Designer × 10 ans → Data Viz Specialist Premium</p>
+  <div class="hero-meta">
+    <div class="meta-item">
+      <span class="meta-label">Durée totale</span>
+      <span class="meta-value">10–12 mois</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Rythme</span>
+      <span class="meta-value">15–20h / sem</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Financement</span>
+      <span class="meta-value">CPF + AIF</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Niveau cible</span>
+      <span class="meta-value">Senior Junior</span>
+    </div>
+  </div>
+</div>
+
+<!-- Progress bar -->
+<div class="progress-tracker" style="margin-top: 40px;">
+  <div class="progress-phase p1" data-label="01 — Fondations" onclick="goToPhase('phase1')" title="Aller à : Fondations"></div>
+  <div class="progress-divider"></div>
+  <div class="progress-phase p2" data-label="02 — Formation" onclick="goToPhase('phase2')" title="Aller à : Formation"></div>
+  <div class="progress-divider"></div>
+  <div class="progress-phase p3" data-label="03 — Spécialisation" onclick="goToPhase('phase3')" title="Aller à : Spécialisation"></div>
+  <div class="progress-divider"></div>
+  <div class="progress-phase p4" data-label="04 — Emploi" onclick="goToPhase('phase4')" title="Aller à : Emploi"></div>
+  <div class="total-time">→ 12 mois</div>
+</div>
+
+<!-- Superpower block -->
+<div class="superpower">
+  <div class="superpower-tag">// Ton avantage compétitif</div>
+  <div class="superpower-title">Tu n'es pas un data analyst.<br>Tu es un traducteur visuel de la donnée.</div>
+  <p style="font-size: 12px; color: var(--muted); line-height: 1.7; max-width: 600px;">Là où 99% des data analysts font des dashboards fonctionnels mais visuellement médiocres, toi tu apportes une dimension créative rare. Ce profil hybride est précisément ce que le marché cherche — et ne trouve pas.</p>
+  <div class="superpower-grid">
+    <div class="superpower-item">
+      <div class="superpower-icon">🎨</div>
+      <div class="superpower-label">Design System</div>
+      <div class="superpower-text">Tu construis des dashboards cohérents, avec typographie, palette et grille — pas juste des graphiques collés ensemble.</div>
+    </div>
+    <div class="superpower-item">
+      <div class="superpower-icon">📖</div>
+      <div class="superpower-label">Data Storytelling</div>
+      <div class="superpower-text">Tu comprends la narration visuelle. Un bon dashboard raconte une histoire — c'est ton métier depuis 10 ans.</div>
+    </div>
+    <div class="superpower-item">
+      <div class="superpower-icon">⚡</div>
+      <div class="superpower-label">UX Analytique</div>
+      <div class="superpower-text">Tu penses parcours utilisateur sur les outils de reporting — une compétence que les data analysts n'ont pas.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Timeline -->
+<div class="timeline">
+
+  <!-- PHASE 1 -->
+  <div class="phase phase-1" id="phase1">
+    <div class="phase-sidebar">
+      <div class="phase-dot phase-1" style="color: var(--phase1);"></div>
+      <div class="phase-number">Phase 01</div>
+      <div class="phase-duration phase-1">Mois<br>1–2</div>
+      <div class="phase-label" style="margin-top: 8px;">Fondations<br>data</div>
+    </div>
+    <div class="phase-content">
+      <div class="phase-title phase-1" onclick="goToPhase('phase1')">Poser les bases</div>
+      <div class="phase-subtitle">Tu arrives avec une avance sur les autres : culture digitale, logique visuelle, Excel déjà connu. Ces 2 mois t'amènent au niveau requis pour la formation certifiante.</div>
+
+      <div class="phase-progress-wrap">
+        <div class="phase-progress-bar"><div class="phase-progress-fill phase-1" id="prog1"></div></div>
+        <div class="phase-progress-label"><span id="prog1-label">0</span> / 7 complétés</div>
+      </div>
+      
+      <div class="skills-grid">
+        <div class="skill-card phase-1" style="color: var(--phase1);" data-id="s1-1" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">SQL — Fondamentaux</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Priorité haute</div>
+          <div class="skill-desc">SELECT, WHERE, JOIN, GROUP BY. La langue maternelle de la data. Ressource : SQLZoo + Mode Analytics (gratuit)</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 80%;"></div></div>
+          <div class="hours-label">~30h • 3 semaines</div>
+        </div>
+
+        <div class="skill-card phase-1" style="color: var(--phase1);" data-id="s1-2" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Excel Avancé</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Rapide</div>
+          <div class="skill-desc">TCD, RECHERCHEV, formules avancées. Tu as probablement déjà 50% — consolide le reste. Ressource : Exceljet.net</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 30%;"></div></div>
+          <div class="hours-label">~10h • 1 semaine</div>
+        </div>
+
+        <div class="skill-card phase-1" style="color: var(--phase1);" data-id="s1-3" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Culture Data & Métier</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">En continu</div>
+          <div class="skill-desc">Podcasts, newsletters, YouTube. Comprendre les KPIs, les types d'analyses, le vocabulaire métier. Ressource : Nightingale, DataViz Society</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 50%;"></div></div>
+          <div class="hours-label">~20h • en parallèle</div>
+        </div>
+
+        <div class="skill-card phase-1" style="color: var(--phase1);" data-id="s1-4" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Principes de DataViz</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Ton terrain</div>
+          <div class="skill-desc">Lire "The Functional Art" d'Alberto Cairo. Tu vas reconnaître beaucoup de tes principes design — appliqués à la donnée.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 40%;"></div></div>
+          <div class="hours-label">~15h • livre + pratique</div>
+        </div>
+      </div>
+
+      <div class="deliverable-box">
+        <div class="deliverable-title">// Livrables de phase</div>
+        <div class="deliverable-items">
+          <div class="deliverable-item" data-id="d1-1" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div>Maîtriser les 10 requêtes SQL les plus utilisées en analyse</div>
+          <div class="deliverable-item" data-id="d1-2" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div>Créer ton premier tableau de bord Excel avec TCD</div>
+          <div class="deliverable-item" data-id="d1-3" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div>Ouvrir un compte Behance et épingler 20 portfolios data viz inspirants</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="phase phase-2" id="phase2">
+    <div class="phase-sidebar">
+      <div class="phase-dot" style="color: var(--phase2);"></div>
+      <div class="phase-number">Phase 02</div>
+      <div class="phase-duration phase-2">Mois<br>2–8</div>
+      <div class="phase-label" style="margin-top: 8px;">Formation<br>certifiante</div>
+    </div>
+    <div class="phase-content">
+      <div class="phase-title phase-2" onclick="goToPhase('phase2')">Formation RNCP Data Analyst</div>
+      <div class="phase-subtitle">Le cœur de ta reconversion. Une formation certifiante (titre RNCP Niveau 6) financée par CPF + AIF France Travail. Objectif : obtenir le titre officiel ET les compétences techniques réelles.</div>
+
+      <div class="phase-progress-wrap">
+        <div class="phase-progress-bar"><div class="phase-progress-fill phase-2" id="prog2"></div></div>
+        <div class="phase-progress-label"><span id="prog2-label">0</span> / 8 complétés</div>
+      </div>
+      
+      <div class="skills-grid">
+        <div class="skill-card phase-2" style="color: var(--phase2);" data-id="s2-1" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Power BI — Complet</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Cœur métier</div>
+          <div class="skill-desc">Modélisation, DAX, Power Query, visuels personnalisés. Tu seras le meilleur de ta promo grâce au design.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 90%;"></div></div>
+          <div class="hours-label">~80h inclus formation</div>
+        </div>
+
+        <div class="skill-card phase-2" style="color: var(--phase2);" data-id="s2-2" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Python — Bases</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Différenciant</div>
+          <div class="skill-desc">Pandas, Matplotlib, Seaborn. Manipulation et visualisation de données. Même des bases te mettent au-dessus de 60% des candidats.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 60%;"></div></div>
+          <div class="hours-label">~50h inclus formation</div>
+        </div>
+
+        <div class="skill-card phase-2" style="color: var(--phase2);" data-id="s2-3" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">SQL — Avancé</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Fondamental</div>
+          <div class="skill-desc">Sous-requêtes, fenêtres, optimisation. La base de toute analyse sérieuse. Consolidé en formation.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 70%;"></div></div>
+          <div class="hours-label">~40h inclus formation</div>
+        </div>
+
+        <div class="skill-card phase-2" style="color: var(--phase2);" data-id="s2-4" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Statistiques appliquées</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Socle</div>
+          <div class="skill-desc">Moyennes, distributions, corrélations, tests. Pas besoin de niveau bac+5 — la pratique suffit pour 80% des missions.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 50%;"></div></div>
+          <div class="hours-label">~30h inclus formation</div>
+        </div>
+      </div>
+
+      <div class="deliverable-box">
+        <div class="deliverable-title">// Organismes recommandés</div>
+        <div class="deliverable-items">
+          <div class="deliverable-item" data-id="d2-1" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div><span><strong style="color: var(--phase2);">Jedha</strong> — Meilleur bootcamp Europe 2025, format 7 mois temps partiel ✓</span></div>
+          <div class="deliverable-item" data-id="d2-2" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div><span><strong style="color: var(--phase2);">DataScientest</strong> — Partenariat Mines Paris PSL, 8,5 mois, très reconnu grands groupes</span></div>
+          <div class="deliverable-item" data-id="d2-3" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div><span><strong style="color: var(--phase2);">OpenClassrooms</strong> — Mentorat individuel, très flexible, bon pour autonomes</span></div>
+          <div class="deliverable-item" data-id="d2-4" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div><span>Budget : 6 000–8 000€ → <strong style="color: var(--phase1);">souvent 0€ reste à charge</strong> avec CPF + AIF</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div class="phase phase-3" id="phase3">
+    <div class="phase-sidebar">
+      <div class="phase-dot" style="color: var(--phase3);"></div>
+      <div class="phase-number">Phase 03</div>
+      <div class="phase-duration phase-3">Mois<br>7–10</div>
+      <div class="phase-label" style="margin-top: 8px;">Spécialisation<br>data viz</div>
+    </div>
+    <div class="phase-content">
+      <div class="phase-title phase-3" onclick="goToPhase('phase3')">Devenir Data Viz Specialist</div>
+      <div class="phase-subtitle">C'est ici que tu transformes ton background design en avantage absolu. Ces outils + ta sensibilité visuelle = un profil que les recruteurs ne voient presque jamais.</div>
+
+      <div class="phase-progress-wrap">
+        <div class="phase-progress-bar"><div class="phase-progress-fill phase-3" id="prog3"></div></div>
+        <div class="phase-progress-label"><span id="prog3-label">0</span> / 9 complétés</div>
+      </div>
+      
+      <div class="skills-grid">
+        <div class="skill-card phase-3" style="color: var(--phase3);" data-id="s3-1" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Certification PL-300</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Must-have</div>
+          <div class="skill-desc">Certification officielle Microsoft Power BI. Très visible sur LinkedIn. ~165€. À passer dès la fin de formation.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 85%;"></div></div>
+          <div class="hours-label">~40h de préparation</div>
+        </div>
+
+        <div class="skill-card phase-3" style="color: var(--phase3);" data-id="s3-2" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Figma → Dashboard</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Ton secret</div>
+          <div class="skill-desc">Maquetter tes dashboards dans Figma avant de les construire dans Power BI. Aucun data analyst ne fait ça — toi tu peux.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 40%;"></div></div>
+          <div class="hours-label">~20h • tu connais déjà Figma</div>
+        </div>
+
+        <div class="skill-card phase-3" style="color: var(--phase3);" data-id="s3-3" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Tableau</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Complément</div>
+          <div class="skill-desc">Très utilisé en grands groupes et cabinets conseil. Notions suffisantes — 2 semaines pour un designer qui connaît Power BI.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 45%;"></div></div>
+          <div class="hours-label">~25h • formation gratuite Tableau Public</div>
+        </div>
+
+        <div class="skill-card phase-3" style="color: var(--phase3);" data-id="s3-4" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">D3.js — Initiation</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Différenciant++</div>
+          <div class="skill-desc">Dataviz interactive sur le web. Avec ton background web UI, tu apprendras 3x plus vite. Ouvre la porte aux agences et médias.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 55%;"></div></div>
+          <div class="hours-label">~40h • observablehq.com</div>
+        </div>
+      </div>
+
+      <div class="deliverable-box">
+        <div class="deliverable-title">// Livrables de phase — Ton portfolio</div>
+        <div class="deliverable-items">
+          <div class="deliverable-item" data-id="d3-1" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div>Projet 1 : Dashboard Power BI redesigné (before/after d'un vrai dashboard moche)</div>
+          <div class="deliverable-item" data-id="d3-2" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div>Projet 2 : Data story visuelle sur un sujet qui te passionne (infographie + analyse)</div>
+          <div class="deliverable-item" data-id="d3-3" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div>Projet 3 : Dashboard D3.js interactif sur données publiques (INSEE, data.gouv.fr)</div>
+          <div class="deliverable-item" data-id="d3-4" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div>Projet 4 : Case study complet avec brief → maquette Figma → Power BI final</div>
+          <div class="deliverable-item" data-id="d3-5" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div>Publication sur Behance + GitHub + LinkedIn simultanément</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 4 -->
+  <div class="phase phase-4" id="phase4">
+    <div class="phase-sidebar">
+      <div class="phase-dot" style="color: var(--phase4);"></div>
+      <div class="phase-number">Phase 04</div>
+      <div class="phase-duration phase-4">Mois<br>9–12</div>
+      <div class="phase-label" style="margin-top: 8px;">Recherche<br>d'emploi</div>
+    </div>
+    <div class="phase-content">
+      <div class="phase-title phase-4" onclick="goToPhase('phase4')">Conquérir le marché</div>
+      <div class="phase-subtitle">Avec un portfolio solide, une certification reconnue et un profil hybride rarissime, tu entres sur le marché avec une vraie proposition de valeur différenciante.</div>
+
+      <div class="phase-progress-wrap">
+        <div class="phase-progress-bar"><div class="phase-progress-fill phase-4" id="prog4"></div></div>
+        <div class="phase-progress-label"><span id="prog4-label">0</span> / 8 complétés</div>
+      </div>
+      
+      <div class="skills-grid">
+        <div class="skill-card phase-4" style="color: var(--phase4);" data-id="s4-1" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">LinkedIn — Refonte</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Urgent</div>
+          <div class="skill-desc">Titre : "Data Visualization Designer | UI Design × Data Analytics". Projets visibles. Réseau actif. 30 min/jour suffit.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 70%;"></div></div>
+          <div class="hours-label">Semaine 1 de cette phase</div>
+        </div>
+
+        <div class="skill-card phase-4" style="color: var(--phase4);" data-id="s4-2" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Ciblage recruteurs</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Stratégique</div>
+          <div class="skill-desc">Agences de communication data, startups B2B SaaS, cabinets conseil, médias (Le Monde, Libération ont des équipes dataviz), grandes marques.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 60%;"></div></div>
+          <div class="hours-label">Liste de 50 cibles idéales</div>
+        </div>
+
+        <div class="skill-card phase-4" style="color: var(--phase4);" data-id="s4-3" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Pitch — 2 minutes</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Clé</div>
+          <div class="skill-desc">"10 ans de design + data analytics = je crée des dashboards que les décideurs comprennent ET retiennent." Pratiquer jusqu'à fluidité totale.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 50%;"></div></div>
+          <div class="hours-label">5 répétitions minimum</div>
+        </div>
+
+        <div class="skill-card phase-4" style="color: var(--phase4);" data-id="s4-4" onclick="toggleItem(this)">
+          <div class="skill-card-header">
+            <div class="skill-name">Freelance en parallèle</div>
+            <div class="check-circle"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0f" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="skill-badge" style="display:inline-block;margin-bottom:6px;">Optionnel+</div>
+          <div class="skill-desc">Proposer des dashboards Power BI à des petites entreprises de ton réseau. Enrichit le portfolio ET génère des revenus pendant la recherche.</div>
+          <div class="hours-bar"><div class="hours-fill" style="width: 35%;"></div></div>
+          <div class="hours-label">1-2 petits clients</div>
+        </div>
+      </div>
+
+      <div class="deliverable-box">
+        <div class="deliverable-title">// Rôles à cibler par priorité</div>
+        <div class="deliverable-items">
+          <div class="deliverable-item" data-id="d4-1" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div><span><strong style="color: var(--phase4);">Data Visualization Designer</strong> — 42–55k€ junior | Ton profil exact</span></div>
+          <div class="deliverable-item" data-id="d4-2" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div><span><strong style="color: var(--phase4);">BI Designer / BI Analyst</strong> — 38–50k€ | Fort volume d'offres</span></div>
+          <div class="deliverable-item" data-id="d4-3" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div><span><strong style="color: var(--phase4);">Product Designer Data</strong> — 45–60k€ | Startups tech, valorise ton UI</span></div>
+          <div class="deliverable-item" data-id="d4-4" onclick="toggleItem(this)"><div class="d-check"><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3 5.5L8 1" stroke="#0a0a0f" stroke-width="1.6" stroke-linecap="round"/></svg></div><span><strong style="color: var(--phase4);">Data Analyst + dimension créative</strong> — 38–48k€ | Plus de volume, moins différenciant</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Salary section -->
+<div class="salary-section">
+  <div class="salary-tag">// Projection salariale — Ile-de-France</div>
+  <div class="salary-grid">
+    <div class="salary-item">
+      <div class="salary-amount phase-2">38–48k</div>
+      <div class="salary-role">Data Analyst junior<br><span style="font-size:10px; color: var(--muted);">Mois 10–12</span></div>
+    </div>
+    <div class="salary-item">
+      <div class="salary-amount phase-3">45–58k</div>
+      <div class="salary-role">Data Viz Designer<br><span style="font-size:10px; color: var(--muted);">An 1–2</span></div>
+    </div>
+    <div class="salary-item">
+      <div class="salary-amount phase-4">60–80k+</div>
+      <div class="salary-role">Senior / Lead DataViz<br><span style="font-size:10px; color: var(--muted);">An 3–5</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-text">Roadmap générée par Claude • Mars 2026 • Personnalisée pour profil Graphic Designer 10 ans</div>
+  <div class="footer-accent">Design × Data = Profil Premium ✦</div>
+</div>
+
+<script>
+  // ── SCROLL ──
+  function goToPhase(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── CHECKBOX SYSTEM ──
+  const STORAGE_KEY = 'dvd-roadmap-progress';
+
+  // Phase item counts: [skills, deliverables]
+  const phaseTotals = { 1: 7, 2: 8, 3: 9, 4: 8 };
+
+  function getState() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch { return {}; }
+  }
+
+  function saveState(state) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function toggleItem(el) {
+    const id = el.dataset.id;
+    if (!id) return;
+    const state = getState();
+    state[id] = !state[id];
+    saveState(state);
+    applyState(el, state[id]);
+    updatePhaseProgress(id.split('-')[0].replace('s','').replace('d',''));
+  }
+
+  function applyState(el, done) {
+    el.classList.toggle('done', !!done);
+  }
+
+  function updatePhaseProgress(phaseNum) {
+    const state = getState();
+    const total = phaseTotals[phaseNum];
+    // count all items for this phase
+    const items = document.querySelectorAll(`[data-id^="s${phaseNum}-"], [data-id^="d${phaseNum}-"]`);
+    let count = 0;
+    items.forEach(el => { if (state[el.dataset.id]) count++; });
+    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+    const fill = document.getElementById(`prog${phaseNum}`);
+    const label = document.getElementById(`prog${phaseNum}-label`);
+    if (fill) fill.style.width = pct + '%';
+    if (label) label.textContent = count;
+  }
+
+  function restoreAll() {
+    const state = getState();
+    document.querySelectorAll('[data-id]').forEach(el => {
+      if (state[el.dataset.id]) applyState(el, true);
+    });
+    [1,2,3,4].forEach(n => updatePhaseProgress(n));
+  }
+
+  // ── FADE IN ──
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.phase').forEach(p => observer.observe(p));
+
+  // ── ACTIVE NAV ──
+  const phases = ['phase1','phase2','phase3','phase4'];
+  const navLinks = document.querySelectorAll('.nav-link');
+  const navObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = phases.indexOf(entry.target.id);
+        navLinks.forEach((l, i) => l.classList.toggle('active', i === idx));
+      }
+    });
+  }, { threshold: 0.3 });
+  phases.forEach(id => { const el = document.getElementById(id); if (el) navObserver.observe(el); });
+
+  // ── INIT ──
+  restoreAll();
+</script>
+
+</body>
+</html>
